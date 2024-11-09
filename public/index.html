@@ -154,7 +154,7 @@
                 analyzeButton.disabled = true;
                 const API_URL = window.location.origin + '/analyze';
                 // Make API request
-                fetch(API_URL, {
+                fetch('http://localhost:3000/analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -163,12 +163,14 @@
                         url: url,
                         n: n
                     })
-                }).then(function(response) {
+                })
+                .then(function(response) {
                     if (!response.ok) {
                         throw new Error('Failed to analyze URL');
                     }
                     return response.json();
-                }).then(function(data) {
+                })
+                .then(function(data) {
                     // Clear previous results
                     resultsBody.innerHTML = '';
                     
