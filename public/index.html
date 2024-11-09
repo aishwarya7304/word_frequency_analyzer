@@ -152,7 +152,6 @@
                 loadingDiv.style.display = 'block';
                 resultsTable.style.display = 'none';
                 analyzeButton.disabled = true;
-                const API_URL = window.location.origin + '/analyze';
                 // Make API request
                 fetch('http://localhost:3000/analyze', {
                     method: 'POST',
