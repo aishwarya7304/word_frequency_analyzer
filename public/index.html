@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Frequency Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        input {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="url"] {
+            flex: 1;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+        
+        button {
+            padding: 0.5rem 1rem;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #f5f5f5;
+        }
+        
+        .error {
+            color: #cc0000;
+            padding: 1rem;
+            background: #ffebeb;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Word Frequency Analyzer</h1>
+        
+        <div class="input-group">
+            <input type="url" id="urlInput" placeholder="Enter URL to analyze..." required aria-label="sw">
+            <label>
+                Top N words:
+                <input type="number" id="numWordsInput" value="10" min="1" max="100" aria-label="sed">
+            </label>
+            <button id="analyzeButton">Analyze</button>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="loading" class="loading">Analyzing...</div>
+        
+        <table id="resultsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Word</th>
+                    <th>Frequency</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('urlInput');
+            const numWordsInput = document.getElementById('numWordsInput');
+            const analyzeButton = document.getElementById('analyzeButton');
+            const errorDiv = document.getElementById('error');
+            const loadingDiv = document.getElementById('loading');
+            const resultsTable = document.getElementById('resultsTable');
+            const resultsBody = document.getElementById('resultsBody');
+
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                resultsTable.style.display = 'none';
+            }
+
+            analyzeButton.addEventListener('click', function() {
+                const url = urlInput.value;
+                const n = parseInt(numWordsInput.value);
+
+                if (!url) {
+                    showError('Please enter a URL');
+                    return;
+                }
+
+                if (isNaN(n) || n < 1) {
+                    showError('Please enter a valid number greater than 0');
+                    return;
+                }
+
+                // Reset UI state
+                errorDiv.style.display = 'none';
+                loadingDiv.style.display = 'block';
+                resultsTable.style.display = 'none';
+                analyzeButton.disabled = true;
+
+                // Make API request
+                fetch('http://localhost:3000/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        url: url,
+                        n: n
+                    })
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to analyze URL');
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    // Clear previous results
+                    resultsBody.innerHTML = '';
+                    
+                    // Add new results
+                    data.words.forEach(function(item) {
+                        var row = document.createElement('tr');
+                        row.innerHTML = '<td>' + item.word + '</td><td>' + item.frequency + '</td>';
+                        resultsBody.appendChild(row);
+                    });
+
+                    // Show results table
+                    resultsTable.style.display = 'table';
+                })
+                .catch(function(error) {
+                    showError(error.message);
+                })
+                .finally(function() {
+                    loadingDiv.style.display = 'none';
+                    analyzeButton.disabled = false;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
